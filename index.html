@@ -14,7 +14,7 @@
     <div class="container">
         <h1>Upload Milestone plan</h1>
         <input type="file" id="fileInput">
-        <button onclick="uploadFile()">Upload to GitHub</button>
+        <button onclick="uploadFile()">Upload Milestone</button>
         <div id="status"></div>
     </div>
 
@@ -40,7 +40,7 @@
                     // Replace these with your details
                     const repoOwner = 'ErwinMiranda';
                     const repoName = 'MPdata';
-                    const filePath = `uploads/${file.name}`; // File will be saved in uploads folder
+                    const filePath = `data/${file.name}`; // File will be saved in uploads folder
                     const commitMessage = `Added ${file.name}`;
                     
                     // In production, you should handle this token more securely
