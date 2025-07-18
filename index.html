@@ -19,60 +19,70 @@
     </div>
 
     <script>
-async function uploadFileWithLongToken() {
-  const fileInput = document.getElementById('fileInput');
-  const statusDiv = document.getElementById('status');
-  const file = fileInput.files[0];
-
-  // Validate token length
-  const accessToken = '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';
-  if (accessToken.length !== 93 || !accessToken.startsWith('github_pat_')) {
-    statusDiv.textContent = 'Invalid token format';
+async function uploadCSVToGitHub() {
+  const fileInput = document.getElementById('csvFileInput');
+  const statusDiv = document.getElementById('uploadStatus');
+  
+  if (!fileInput.files.length) {
+    statusDiv.textContent = 'Please select a CSV file first';
     return;
   }
 
+  const csvFile = fileInput.files[0];
   const reader = new FileReader();
+
   reader.onload = async function(e) {
     try {
-      // Repository details
+      statusDiv.textContent = 'Uploading CSV...';
+      
+      // GitHub repository details
       const repoOwner = 'ErwinMiranda';
       const repoName = 'MPdata';
-      const filePath = `uploads/${file.name}`;
+      const filePath = `data/${csvFile.name}`; // Will create a 'data' directory
+      const commitMessage = `Added CSV file: ${csvFile.name}`;
       
-      // Convert content
-      const content = btoa(unescape(encodeURIComponent(e.target.result)));
+      // Get token securely (in production, use backend or environment variables)
+      const accessToken = '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'; 
 
-      // API request
+      // Convert CSV content to Base64
+      const csvContent = e.target.result;
+      const base64Content = btoa(unescape(encodeURIComponent(csvContent)));
+      
+      // GitHub API request
       const response = await fetch(
         `https://api.github.com/repos/${repoOwner}/${repoName}/contents/${filePath}`,
         {
           method: 'PUT',
           headers: {
-            'Authorization': `Bearer ${accessToken}`,  // Note: 'Bearer' instead of 'token'
+            'Authorization': `token ${accessToken}`,
             'Content-Type': 'application/json',
-            'Accept': 'application/vnd.github+json',
-            'X-GitHub-Api-Version': '2022-11-28'
+            'Accept': 'application/vnd.github.v3+json'
           },
           body: JSON.stringify({
-            message: `Added ${file.name}`,
-            content: content
+            message: commitMessage,
+            content: base64Content,
+            // Optional: branch name if not using main
+            // branch: 'your-branch-name'
           })
         }
       );
 
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Upload failed');
+      const result = await response.json();
+      
+      if (response.ok) {
+        statusDiv.innerHTML = `CSV uploaded successfully!<br>
+          <a href="${result.content.html_url}" target="_blank">View on GitHub</a>`;
+      } else {
+        throw new Error(result.message || 'Failed to upload CSV');
       }
-
-      statusDiv.textContent = 'File uploaded successfully!';
     } catch (error) {
       statusDiv.textContent = `Error: ${error.message}`;
-      console.error('Upload failed:', error);
+      console.error('Upload error:', error);
     }
   };
 
-  reader.readAsBinaryString(file);
+  // Read as binary string to preserve CSV formatting
+  reader.readAsBinaryString(csvFile);
 }
     </script>
 </body>
